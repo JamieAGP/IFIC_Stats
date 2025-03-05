@@ -1,110 +1,47 @@
-# ITU IFIC Database Processing Script
+# **ITU IFIC Database Statistics**
 
-## Overview
-This Python script automates the process of fetching, downloading, extracting, and analyzing ITU's **IFIC (International Frequency Information Circular)** databases. It performs the following tasks:
+## **Overview**
+The **Space International Frequency Information Circular (IFIC)**, published by the **ITU**, provides a comprehensive dataset on satellite network filings, frequency assignments, and coordination requests. It is a critical resource for **spectrum management, interference analysis, and regulatory compliance**.
 
-1. **Fetches IFIC record URLs** from ITU's official website.
-2. **Downloads ZIP files** containing `.mdb` (Microsoft Access Database) files.
-3. **Extracts the databases** into a local directory.
-4. **Queries the databases** to analyze notice records.
-5. **Generates interactive charts** using Plotly.
+This document presents an analysis of **trends and statistics** extracted from the IFIC database using scripts in this repository and IFIC datasets from the [ITU IFIC Database](https://www.itu.int/sns/wic/demowic25.html).
 
 ---
 
-## Dependencies
-Ensure you have the following Python libraries installed:
 
-```bash
-pip install requests beautifulsoup4 pyodbc plotly pandas concurrent.futures
-```
+# ITU IFIC Database Statistics
 
----
+## 1. Annual Filing Trends & Spectrum Management
 
-## Directory Structure
-- **`downloads/`** → Stores the downloaded IFIC ZIP files.
-- **`databases/`** → Extracted `.mdb` database files.
-- **Generated Charts:**
-  - `admin_counts_horizontal.html` (Notice counts per administration)
-  - `ntf_rsn_percentages.html` (Notification reasons distribution)
-  - `ntc_type_distribution.html` (Notice type distribution)
+### 1.1 Overall Filing Activity
+- **Yearly Active Filings:** In the last 10 years, ~3000 new filings are made every year. Filing activity has [generally increased](README_plots/unique_ntc_id_per_year.html) in the last 10 years, while there are small dips in specific years.
+- **Administration Contributions:** [China, USA, France and Russa are the most prominent single contributors](README_plots/admin_counts_stacked_percentage.html). Together they make up nearly half of all filings. The UAE have increased their filing in the last year relative to the last decade, while Germany have decreased their presence.
 
----
+### 1.2 Orbit Type & Frequency Trends
+- **GSO vs. NGSO Split:** Non-Geostationary filings are steadiliy increasing in [count](README_plots/ntc_type_stacked.html) and [proportion](README_plots/ntc_type_stacked_percentage.html) of filings. In 2024, NGSO filings represent 43% of all submissions, compared to 38% for GSO, marking a shift in orbital deployment strategy.
+- **Frequency Band Usage:** K, Ka and Ku bands are the most widely used bands, together [making up ~60% of total filings](README_plots/frequency_bands_stacked_percentage.html). L-band usage has grown steadily, along with UHF-band amd V-band. Legacy bands such as C and X show a gradual decline. [Actual counts](README_plots/frequency_bands_stacked.html).
 
-## Script Components
+### 1.3 Notification Reason
+- The group comprising RR1488 / 11.2 / 11.12 / AP30/30A-Art 5 / AP30B-Art 8, which governs the formal notification and recording of assignments, especially for planned services like BSS and FSS, has consistently made up [approximately 44% of filings](README_plots/ntf_rsn_stacked_percentage.html), reflecting a stable and procedural use of spectrum resources.
+- The RR1060 / 9.6 / 9.7A / 9.21 group, which covers coordination requirements to avoid interference, [peaked in 2017 and has steadily declined](README_plots/ntf_rsn_stacked.html), indicating reduced reliance on coordination procedures, possibly due to shifts toward planned band usage or more simplified regulatory environments.
+- Article 9.1 filings, which represent advance publication for planned satellite networks, show a strong upward trend from their lowest point in 2016. This suggests a shift toward more proactive spectrum planning, likely driven by the rise of large NGSO constellations.
 
-### 1. **Fetching IFIC Records**
-- Scrapes IFIC database links from ITU's website for a given year range.
-- Extracts valid download links matching specific IFIC database formats (`converted-to-v9.1`, `converted-to-v10`, `ific10`).
+## 2. Antenna Radiation Patterns
 
-### 2. **Downloading IFIC Files**
-- Identifies which files need downloading and fetches them using `requests`.
-- Uses **ThreadPoolExecutor** to download files concurrently.
-
-### 3. **Extracting Databases**
-- Unzips the `.mdb` files from downloaded archives.
-- Checks for duplicate extractions to prevent redundant processing.
-
-### 4. **Querying the Databases**
-- Connects to each `.mdb` file using `pyodbc`.
-- Retrieves and aggregates notice data, analyzing:
-  - **Notices per administration**
-  - **Notification reasons (`ntf_rsn`)**
-  - **Notice types (`ntc_type`)**
-- Outputs summary statistics and generates visualizations.
-
-### 5. **Generating Charts**
-- Uses **Plotly** to create interactive bar and pie charts.
-- Saves charts as standalone HTML files for easy sharing.
+- **Yearly Increase:** Although the total number of antenna patterns has [steadily increased](README_plots/pattern_count_stacked.html) over the last 10 years, the number of patterns actually in use has remained signficantly lower. The patterns here are counted via their pattern ID.
 
 ---
+# How to Use
 
-## Usage Instructions
-1. **Run the script:**
-   ```bash
-   python script.py
+1. **Setup Environment**
    ```
-2. **Enter the date range** when prompted.
-3. **Confirm downloads** if required.
-4. **Extract and analyze** the databases.
-5. **View the generated charts** in your browser.
+   python -m venv venv
+   source venv/bin/activate  # or venv\Scripts\activate on Windows
+   pip install -r requirements.txt
+   ```
 
----
+2. **Directories**
+   - Adjust `DOWNLOAD_DIR`, `EXTRACT_DIR`, `OUTPUT_DIR` in the script as needed.
 
-## Notes
-- Requires **Microsoft Access ODBC Driver** to read `.mdb` files.
-- Can be modified to handle different IFIC formats.
-- Improves efficiency with parallel downloads and structured queries.
-
----
-
-### **Example Output**
-```
-Found 10 IFIC record(s) in the range:
- - 15.01.2024: IFIC_2024_01.zip
- - 29.01.2024: IFIC_2024_02.zip
-...
-3 file(s) need downloading.
-Proceed with download? (y/n): y
-[Downloading] https://www.itu.int/... -> IFIC_2024_01.zip
-...
-[Success] Downloaded: IFIC_2024_01.zip
-Extracted IFIC_2024_01.mdb
-...
-Total notices processed: 150,000
-Charts generated:
- - admin_counts_horizontal.html
- - ntf_rsn_percentages.html
- - ntc_type_distribution.html
-```
-
----
-
-## Future Improvements
-- Automate database cleanup after processing.
-- Enhance error handling for failed downloads.
-- Add filtering options for more granular notice queries.
-
----
-
-**Author:** Jamie Parker
-**Last Updated:** March 2025
+3. **Run Script**
+   - Simply run: `python your_script.py`
+   - The script downloads, extracts MDB files, runs queries, and saves charts in `OUTPUT_DIR`.
